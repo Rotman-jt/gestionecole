@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion & Inscription</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body{
+            background-image: url(photo/beautiful-shot-tree-savanna-plains-with-blue-sky.jpg);
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        :root {
+            --bleu-fonce: #0a2463;
+            --bleu-moyen: #3e5fc9;
+            --bleu-clair: #7e9df8;
+            --bleu-accent: #00a6fb;
+            --bleu-pale: #d7e3fc;
+            --text-light: #ffffff;
+            --text-dark: #1a1a2e;
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-bounce: all 0.6s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+        }
+
+        .bg-bleu-fonce { background-color: var(--bleu-fonce); }
+        .bg-bleu-moyen { background-color: var(--bleu-moyen); }
+        .bg-bleu-clair { background-color: var(--bleu-clair); }
+        .bg-bleu-accent { background-color: var(--bleu-accent); }
+        .bg-bleu-pale { background-color: var(--bleu-pale); }
+        
+        .text-bleu-fonce { color: var(--bleu-fonce); }
+        .text-bleu-moyen { color: var(--bleu-moyen); }
+        .text-bleu-clair { color: var(--bleu-clair); }
+        .text-bleu-accent { color: var(--bleu-accent); }
+        .text-bleu-pale { color: var(--bleu-pale); }
+        
+        .border-bleu-fonce { border-color: var(--bleu-fonce); }
+        .border-bleu-moyen { border-color: var(--bleu-moyen); }
+        .border-bleu-clair { border-color: var(--bleu-clair); }
+        .border-bleu-accent { border-color: var(--bleu-accent); }
+        .border-bleu-pale { border-color: var(--bleu-pale); }
+
+        .transition-all { transition: var(--transition); }
+        .transition-bounce { transition: var(--transition-bounce); }
+
+        .shadow-md { box-shadow: var(--shadow-md); }
+        .shadow-lg { box-shadow: var(--shadow-lg); }
+
+        .page {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            width: 100%;
+            transition: var(--transition);
+        }
+
+        .page.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group input {
+            transition: var(--transition);
+        }
+
+        .input-group input:focus ~ label,
+        .input-group input:not(:placeholder-shown) ~ label {
+            transform: translateY(-1.5rem) scale(0.85);
+            color: var(--bleu-accent);
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 1rem;
+            top: 0.8rem;
+            color: var(--bleu-moyen);
+            background-color: white;
+            padding: 0 0.25rem;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 0.8rem;
+            cursor: pointer;
+            color: var(--bleu-moyen);
+        }
+
+        .strength-meter {
+            height: 4px;
+            background-color: #e0e0e0;
+            margin-top: 0.5rem;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-meter-fill {
+            height: 100%;
+            width: 0%;
+            transition: var(--transition);
+        }
+
+        .strength-0 .strength-meter-fill {
+            width: 20%;
+            background-color: #ff4444;
+        }
+
+        .strength-1 .strength-meter-fill {
+            width: 40%;
+            background-color: #ffbb33;
+        }
+
+        .strength-2 .strength-meter-fill {
+            width: 60%;
+            background-color: #ffbb33;
+        }
+
+        .strength-3 .strength-meter-fill {
+            width: 80%;
+            background-color: #00C851;
+        }
+
+        .strength-4 .strength-meter-fill {
+            width: 100%;
+            background-color: #00C851;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .input-error {
+            border-color: #ff4444 !important;
+        }
+
+        .input-error ~ label {
+            color: #ff4444 !important;
+        }
+
+        .floating-btn {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Style spécifique pour le bouton Google */
+        .google-btn {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            color: #4285F4;
+            transition: var(--transition);
+        }
+
+        .google-btn:hover {
+            background-color: #f8f9fa;
+            border-color: #d2d6db;
+            color: #3367D6;
+        }
+    </style>
+</head>
+<body class="bg-bleu-pale min-h-screen flex items-center justify-center p-4">
+    <div class="relative w-full max-w-md">
+        <!-- Bouton flottant pour basculer entre connexion et inscription -->
+        <button id="toggleAuth" class="floating-btn absolute -top-16 right-0 bg-bleu-accent text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-50 transition-bounce hover:bg-bleu-moyen">
+            <i class="fas fa-user-plus text-xl"></i>
+        </button>
+
+        <!-- Page de Connexion -->
+        <div id="loginPage" class="page active bg-white rounded-2xl shadow-lg p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-bleu-fonce mb-2">Content de vous revoir</h1>
+                <p class="text-bleu-moyen">Connectez-vous pour accéder à votre compte</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div class="input-group">
+                    <input type="email" id="loginEmail" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="loginEmail">Adresse email</label>
+                    <div class="error-message" id="loginEmailError">Veuillez entrer une adresse email valide</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="loginPassword" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="loginPassword">Mot de passe</label>
+                    <i class="fas fa-eye password-toggle" id="toggleLoginPassword"></i>
+                    <div class="error-message" id="loginPasswordError">Le mot de passe doit contenir au moins 6 caractères</div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="rememberMe" class="w-4 h-4 text-bleu-accent rounded focus:ring-bleu-accent border-bleu-pale">
+                        <label for="rememberMe" class="ml-2 text-sm text-bleu-moyen">Se souvenir de moi</label>
+                    </div>
+                    <a href="#" class="text-sm text-bleu-accent hover:text-bleu-fonce transition-all">Mot de passe oublié?</a>
+                </div>
+
+                <button type="submit" class="w-full bg-bleu-accent text-white py-3 rounded-lg font-medium shadow-md hover:bg-bleu-moyen transition-all focus:outline-none focus:ring-2 focus:ring-bleu-accent focus:ring-opacity-50">
+                    Se connecter
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-bleu-moyen">Pas encore de compte? <button id="switchToRegister" class="text-bleu-accent font-medium hover:text-bleu-fonce transition-all">S'inscrire</button></p>
+            </div>
+
+            <div class="mt-8">
+                <div class="relative flex items-center">
+                    <div class="flex-grow border-t border-bleu-pale"></div>
+                    <span class="flex-shrink mx-4 text-bleu-moyen">Ou connectez-vous avec</span>
+                    <div class="flex-grow border-t border-bleu-pale"></div>
+                </div>
+
+                <div class="flex justify-center mt-4">
+                    <button class="google-btn w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+                        <i class="fab fa-google text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page d'Inscription -->
+        <div id="registerPage" class="page bg-white rounded-2xl shadow-lg p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-bleu-fonce mb-2">Créez votre compte</h1>
+                <p class="text-bleu-moyen">Rejoignez notre communauté dès maintenant</p>
+            </div>
+
+            <form id="registerForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <input type="text" id="firstName" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                        <label for="firstName">Prénom</label>
+                        <div class="error-message" id="firstNameError">Veuillez entrer votre prénom</div>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" id="lastName" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                        <label for="lastName">Nom</label>
+                        <div class="error-message" id="lastNameError">Veuillez entrer votre nom</div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" id="registerEmail" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="registerEmail">Adresse email</label>
+                    <div class="error-message" id="registerEmailError">Veuillez entrer une adresse email valide</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="registerPassword" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="registerPassword">Mot de passe</label>
+                    <i class="fas fa-eye password-toggle" id="toggleRegisterPassword"></i>
+                    <div class="strength-meter">
+                        <div class="strength-meter-fill"></div>
+                    </div>
+                    <div class="error-message" id="registerPasswordError">Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="confirmPassword" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="confirmPassword">Confirmez le mot de passe</label>
+                    <i class="fas fa-eye password-toggle" id="toggleConfirmPassword"></i>
+                    <div class="error-message" id="confirmPasswordError">Les mots de passe ne correspondent pas</div>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="acceptTerms" class="w-4 h-4 text-bleu-accent rounded focus:ring-bleu-accent border-bleu-pale" required>
+                    <label for="acceptTerms" class="ml-2 text-sm text-bleu-moyen">J'accepte les <a href="#" class="text-bleu-accent hover:text-bleu-fonce transition-all">conditions d'utilisation</a></label>
+                </div>
+                <div class="error-message" id="termsError">Vous devez accepter les conditions</div>
+
+                <button type="submit" class="w-full bg-bleu-accent text-white py-3 rounded-lg font-medium shadow-md hover:bg-bleu-moyen transition-all focus:outline-none focus:ring-2 focus:ring-bleu-accent focus:ring-opacity-50">
+                    S'inscrire
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-bleu-moyen">Déjà un compte? <button id="switchToLogin" class="text-bleu-accent font-medium hover:text-bleu-fonce transition-all">Se connecter</button></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Éléments du DOM
+            const loginPage = document.getElementById('loginPage');
+            const registerPage = document.getElementById('registerPage');
+            const toggleAuth = document.getElementById('toggleAuth');
+            const switchToRegister = document.getElementById('switchToRegister');
+            const switchToLogin = document.getElementById('switchToLogin');
+            
+            // Basculer entre les pages
+            function togglePages() {
+                loginPage.classList.toggle('active');
+                registerPage.classList.toggle('active');
+                
+                if (registerPage.classList.contains('active')) {
+                    toggleAuth.innerHTML = '<i class="fas fa-sign-in-alt text-xl"></i>';
+                    toggleAuth.setAttribute('title', 'Se connecter');
+                } else {
+                    toggleAuth.innerHTML = '<i class="fas fa-user-plus text-xl"></i>';
+                    toggleAuth.setAttribute('title', 'S\'inscrire');
+                }
+            }
+            
+            // Événements
+            toggleAuth.addEventListener('click', togglePages);
+            switchToRegister.addEventListener('click', togglePages);
+            switchToLogin.addEventListener('click', togglePages);
+            
+            // Gestion des mots de passe
+            function setupPasswordToggle(inputId, toggleId) {
+                const passwordInput = document.getElementById(inputId);
+                const toggleButton = document.getElementById(toggleId);
+                
+                toggleButton.addEventListener('click', function() {
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        toggleButton.classList.replace('fa-eye', 'fa-eye-slash');
+                    } else {
+                        passwordInput.type = 'password';
+                        toggleButton.classList.replace('fa-eye-slash', 'fa-eye');
+                    }
+                });
+            }
+            
+            setupPasswordToggle('loginPassword', 'toggleLoginPassword');
+            setupPasswordToggle('registerPassword', 'toggleRegisterPassword');
+            setupPasswordToggle('confirmPassword', 'toggleConfirmPassword');
+            
+            // Validation du formulaire d'inscription
+            const registerForm = document.getElementById('registerForm');
+            const registerPassword = document.getElementById('registerPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const strengthMeter = registerPassword.parentElement.querySelector('.strength-meter');
+            
+            // Force du mot de passe
+            registerPassword.addEventListener('input', function() {
+                const password = registerPassword.value;
+                const strength = calculatePasswordStrength(password);
+                strengthMeter.className = 'strength-meter strength-' + strength;
+            });
+            
+            function calculatePasswordStrength(password) {
+                let strength = 0;
+                
+                // Longueur minimale
+                if (password.length >= 8) strength++;
+                // Contient une majuscule
+                if (/[A-Z]/.test(password)) strength++;
+                // Contient un chiffre
+                if (/[0-9]/.test(password)) strength++;
+                // Contient un caractère spécial
+                if (/[^A-Za-z0-9]/.test(password)) strength++;
+                // Longueur supérieure à 12
+                if (password.length >= 12) strength++;
+                
+                return Math.min(strength, 4);
+            }
+            
+            // Validation des champs
+            function validateField(field, errorId, validationFn, errorMessage) {
+                const errorElement = document.getElementById(errorId);
+                const isValid = validationFn(field.value);
+                
+                if (!isValid && field.value.length > 0) {
+                    field.classList.add('input-error');
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = errorMessage;
+                    return false;
+                } else if (field.value.length === 0 && field.required) {
+                    field.classList.add('input-error');
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = 'Ce champ est obligatoire';
+                    return false;
+                } else {
+                    field.classList.remove('input-error');
+                    errorElement.style.display = 'none';
+                    return true;
+                }
+            }
+            
+            // Validation de l'email
+            function validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+            
+            // Validation du mot de passe
+            function validatePassword(password) {
+                return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+            }
+            
+            // Validation de la confirmation du mot de passe
+            function validateConfirmPassword(confirmPassword) {
+                const password = registerPassword.value;
+                return confirmPassword === password;
+            }
+            
+            // Événements de validation
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                let isValid = true;
+                
+                // Valider tous les champs
+                isValid &= validateField(
+                    document.getElementById('firstName'), 
+                    'firstNameError', 
+                    (value) => value.trim().length > 0, 
+                    'Veuillez entrer votre prénom'
+                );
+                
+                isValid &= validateField(
+                    document.getElementById('lastName'), 
+                    'lastNameError', 
+                    (value) => value.trim().length > 0, 
+                    'Veuillez entrer votre nom'
+                );
+                
+                isValid &= validateField(
+                    document.getElementById('registerEmail'), 
+                    'registerEmailError', 
+                    validateEmail, 
+                    'Veuillez entrer une adresse email valide'
+                );
+                
+                isValid &= validateField(
+                    document.getElementById('registerPassword'), 
+                    'registerPasswordError', 
+                    validatePassword, 
+                    'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre'
+                );
+                
+                isValid &= validateField(
+                    document.getElementById('confirmPassword'), 
+                    'confirmPasswordError', 
+                    validateConfirmPassword, 
+                    'Les mots de passe ne correspondent pas'
+                );
+                
+                // Valider les conditions
+                const termsCheckbox = document.getElementById('acceptTerms');
+                const termsError = document.getElementById('termsError');
+                
+                if (!termsCheckbox.checked) {
+                    termsError.style.display = 'block';
+                    isValid = false;
+                } else {
+                    termsError.style.display = 'none';
+                }
+                
+                // Si tout est valide, soumettre le formulaire
+                if (isValid) {
+                    alert('Inscription réussie! Redirection...');
+                    // Ici vous pourriez faire une requête AJAX ou rediriger
+                }
+            });
+            
+            // Validation du formulaire de connexion
+            const loginForm = document.getElementById('loginForm');
+            
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                let isValid = true;
+                
+                isValid &= validateField(
+                    document.getElementById('loginEmail'), 
+                    'loginEmailError', 
+                    validateEmail, 
+                    'Veuillez entrer une adresse email valide'
+                );
+                
+                isValid &= validateField(
+                    document.getElementById('loginPassword'), 
+                    'loginPasswordError', 
+                    (value) => value.length >= 6, 
+                    'Le mot de passe doit contenir au moins 6 caractères'
+                );
+                
+                if (isValid) {
+                    alert('Connexion réussie! Redirection...');
+                    // Ici vous pourriez faire une requête AJAX ou rediriger
+                }
+            });
+            
+            // Validation en temps réel
+            document.getElementById('firstName').addEventListener('blur', function() {
+                validateField(this, 'firstNameError', (value) => value.trim().length > 0, 'Veuillez entrer votre prénom');
+            });
+            
+            document.getElementById('lastName').addEventListener('blur', function() {
+                validateField(this, 'lastNameError', (value) => value.trim().length > 0, 'Veuillez entrer votre nom');
+            });
+            
+            document.getElementById('registerEmail').addEventListener('blur', function() {
+                validateField(this, 'registerEmailError', validateEmail, 'Veuillez entrer une adresse email valide');
+            });
+            
+            document.getElementById('registerPassword').addEventListener('blur', function() {
+                validateField(this, 'registerPasswordError', validatePassword, 'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre');
+            });
+            
+            document.getElementById('confirmPassword').addEventListener('blur', function() {
+                validateField(this, 'confirmPasswordError', validateConfirmPassword, 'Les mots de passe ne correspondent pas');
+            });
+            
+            document.getElementById('loginEmail').addEventListener('blur', function() {
+                validateField(this, 'loginEmailError', validateEmail, 'Veuillez entrer une adresse email valide');
+            });
+            
+            document.getElementById('loginPassword').addEventListener('blur', function() {
+                validateField(this, 'loginPasswordError', (value) => value.length >= 6, 'Le mot de passe doit contenir au moins 6 caractères');
+            });
+
+            // Connexion avec Google
+            document.querySelector('.google-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Connexion avec Google en cours...');
+                // Ici vous pourriez implémenter l'authentification Google
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GESCHOOL - Gestion Scolaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="cdnstyletaylwind.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --secondary: #10b981;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+        }
+        
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item:hover {
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+        
+        .sidebar-item.active {
+            background-color: rgba(79, 70, 229, 0.2);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+        
+        .badge-primary {
+            background-color: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+        
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+        
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        .timetable-cell {
+            min-height: 80px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .timetable-course {
+            border-radius: 0.375rem;
+            padding: 0.25rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        #userMenu{
+            z-index: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 400;
+                display: none;
+            }
+            
+            .overlay.open {
+                display: block;
+            }
+        }
+        
+        /* Toast container */
+        #toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* Toast base */
+        .toast {
+            min-width: 280px;
+            max-width: 360px;
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.4s ease forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Toast types */
+        .toast-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .toast-info {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        /* Icon */
+        .toast i {
+            font-size: 1.25rem;
+        }
+
+        /* Close button */
+        .toast-close {
+            position: absolute;
+            top: 0.4rem;
+            right: 0.6rem;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+        }
+
+        /* Progress bar */
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: rgba(255,255,255,0.4);
+            animation: progress linear forwards;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes progress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        
+        .input-error {
+            border-color: #ef4444 !important;
+        }
+
+        .error-message {
+            display: none;
+            color: #ef4444;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="flex">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 bg-white shadow-md fixed h-full hidden md:block">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <i class="fas fa-school text-indigo-600"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">GESCHOOL</h1>
+                </div>
+            </div>
+            <div class="p-4">
+                <div class="mb-6">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-user-graduate text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">Admin User</p>
+                            <p class="text-xs text-gray-500">Administrateur</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <nav>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Menu Principal</h3>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-item active flex items-center space-x-3 px-3 py-2 rounded-lg text-indigo-600">
+                                <i class="fas fa-tachometer-alt w-5"></i>
+                                <span>Tableau de bord</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="Form_eleves.html" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-users w-5"></i>
+                                <span>Élèves</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-chalkboard-teacher w-5"></i>
+                                <span>Enseignants</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-door-open w-5"></i>
+                                <span>Classes</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-book w-5"></i>
+                                <span>Matières</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-calendar-alt w-5"></i>
+                                <span>Emploi du temps</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-clipboard-check w-5"></i>
+                                <span>Présences</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-graduation-cap w-5"></i>
+                                <span>Notes & Bulletins</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-2">Administration</h3>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-cog w-5"></i>
+                                <span>Paramètres</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-users-cog w-5"></i>
+                                <span>Utilisateurs</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-item flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:text-indigo-600">
+                                <i class="fas fa-file-export w-5"></i>
+                                <span>Export/Import</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Mobile sidebar overlay -->
+        <div class="overlay1"></div>
+        
+        <!-- Main content -->
+        <div class="flex-1 md:ml-64">
+            <!-- Top navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center space-x-4">
+                        <button id="sidebarToggle" class="md:hidden text-gray-600 focus:outline-none">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <h2 class="text-lg font-semibold text-gray-800">Tableau de bord</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-600 hover:text-gray-800 focus:outline-none">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500"></span>
+                        </button>
+                        <button class="text-gray-600 hover:text-gray-800 focus:outline-none">
+                            <i class="fas fa-envelope text-xl"></i>
+                        </button>
+                        <div class="relative">
+                            <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
+                                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    <i class="fas fa-user text-indigo-600"></i>
+                                </div>
+                                <!-- Ici on ajoute un span pour le nom de l'utilisateur -->
+                                <span id="userNameDisplay" class="hidden md:inline text-gray-700">Admin</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                            </button>
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profil</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Paramètres</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="LoginBtn">Connexion</a>
+                                <a id="deconnexion" href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hidden">Déconnexion</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Main content area -->
+            <main class="p-4">
+                <!-- Stats cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Élèves</p>
+                                <h3 class="text-2xl font-bold text-gray-800">1,245</h3>
+                                <p class="text-xs text-green-500 mt-1"><i class="fas fa-arrow-up mr-1"></i> 12% depuis le mois dernier</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <i class="fas fa-user-graduate text-indigo-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Enseignants</p>
+                                <h3 class="text-2xl font-bold text-gray-800">48</h3>
+                                <p class="text-xs text-green-500 mt-1"><i class="fas fa-arrow-up mr-1"></i> 5% depuis le mois dernier</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                                <i class="fas fa-chalkboard-teacher text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Classes</p>
+                                <h3 class="text-2xl font-bold text-gray-800">32</h3>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-equals mr-1"></i> Stable depuis le mois dernier</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i class="fas fa-door-open text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Taux de présence</p>
+                                <h3 class="text-2xl font-bold text-gray-800">94%</h3>
+                                <p class="text-xs text-red-500 mt-1"><i class="fas fa-arrow-down mr-1"></i> 2% depuis le mois dernier</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                <i class="fas fa-clipboard-check text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent activity and timetable -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <!-- Recent activity -->
+                    <div class="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 border-b border-gray-200">
+                            <h3 class="font-semibold text-gray-800">Activité récente</h3>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-user-plus text-indigo-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Nouvel élève inscrit</p>
+                                        <p class="text-xs text-gray-500">Jean Dupont a été ajouté à la classe de Terminale S1</p>
+                                        <p class="text-xs text-gray-400 mt-1">Il y a 15 minutes</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-clipboard-check text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Présences mises à jour</p>
+                                        <p class="text-xs text-gray-500">Mme. Martin a enregistré les présences pour la classe de 1ère ES</p>
+                                        <p class="text-xs text-gray-400 mt-1">Il y a 1 heure</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-graduation-cap text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Nouvelles notes ajoutées</p>
+                                        <p class="text-xs text-gray-500">M. Durand a ajouté les notes du contrôle de Mathématiques</p>
+                                        <p class="text-xs text-gray-400 mt-1">Il y a 3 heures</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-calendar-alt text-yellow-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Emploi du temps modifié</p>
+                                        <p class="text-xs text-gray-500">L'emploi du temps de la classe de 2nde A a été mis à jour</p>
+                                        <p class="text-xs text-gray-400 mt-1">Il y a 5 heures</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-gray-200 text-center">
+                            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Voir toute l'activité</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Today's timetable -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 border-b border-gray-200">
+                            <h3 class="font-semibold text-gray-800">Emploi du temps d'aujourd'hui</h3>
+                            <p class="text-xs text-gray-500">Lundi 12 Juin 2023</p>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-clock text-indigo-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">8h00 - 9h30</p>
+                                        <p class="text-xs text-gray-500">Mathématiques (M. Durand)</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-clock text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">9h45 - 11h15</p>
+                                        <p class="text-xs text-gray-500">Physique-Chimie (Mme. Lambert)</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-clock text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">13h30 - 15h00</p>
+                                        <p class="text-xs text-gray-500">Histoire-Géographie (M. Lefèvre)</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-clock text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">15h15 - 16h45</p>
+                                        <p class="text-xs text-gray-500">Anglais (Mme. Johnson)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-gray-200 text-center">
+                            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Voir l'emploi du temps complet</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Students and teachers lists -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Recent students -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Derniers élèves ajoutés</h3>
+                            <a href="#" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Voir tout</a>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-user text-indigo-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">Marie Dubois</p>
+                                        <p class="text-xs text-gray-500 truncate">Terminale S1 - Matricule: 2023TS101</p>
+                                    </div>
+                                    <span class="badge badge-primary">Nouveau</span>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-user text-indigo-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">Thomas Martin</p>
+                                        <p class="text-xs text-gray-500 truncate">1ère ES - Matricule: 2023ES205</p>
+                                    </div>
+                                    <span class="badge badge-primary">Nouveau</span>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-user text-indigo-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">Sophie Leroy</p>
+                                        <p class="text-xs text-gray-500 truncate">2nde A - Matricule: 2023SA312</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-user text-indigo-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">Lucas Bernard</p>
+                                        <p class="text-xs text-gray-500 truncate">3ème B - Matricule: 2023TB409</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent teachers -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Derniers enseignants ajoutés</h3>
+                            <a href="#" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Voir tout</a>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">Mme. Sophie Lambert</p>
+                                        <p class="text-xs text-gray-500 truncate">Physique-Chimie</p>
+                                    </div>
+                                    <span class="badge badge-primary">Nouveau</span>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">M. Pierre Lefèvre</p>
+                                        <p class="text-xs text-gray-500 truncate">Histoire-Géographie</p>
+                                    </div>
+                                    <span class="badge badge-primary">Nouveau</span>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">Mme. Sarah Johnson</p>
+                                        <p class="text-xs text-gray-500 truncate">Anglais</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">M. Jean Durand</p>
+                                        <p class="text-xs text-gray-500 truncate">Mathématiques</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- login -->
+    <style>
+        body{
+            background-image: url(photo/beautiful-shot-tree-savanna-plains-with-blue-sky.jpg);
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        
+        :root {
+            --bleu-fonce: #0a2463;
+            --bleu-moyen: #3e5fc9;
+            --bleu-clair: #7e9df8;
+            --bleu-accent: #00a6fb;
+            --bleu-pale: #d7e3fc;
+            --text-light: #ffffff;
+            --text-dark: #1a1a2e;
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-bounce: all 0.6s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+        }
+
+        .bg-bleu-fonce { background-color: var(--bleu-fonce); }
+        .bg-bleu-moyen { background-color: var(--bleu-moyen); }
+        .bg-bleu-clair { background-color: var(--bleu-clair); }
+        .bg-bleu-accent { background-color: var(--bleu-accent); }
+        .bg-bleu-pale { background-color: var(--bleu-pale); }
+        
+        .text-bleu-fonce { color: var(--bleu-fonce); }
+        .text-bleu-moyen { color: var(--bleu-moyen); }
+        .text-bleu-clair { color: var(--bleu-clair); }
+        .text-bleu-accent { color: var(--bleu-accent); }
+        .text-bleu-pale { color: var(--bleu-pale); }
+        
+        .border-bleu-fonce { border-color: var(--bleu-fonce); }
+        .border-bleu-moyen { border-color: var(--bleu-moyen); }
+        .border-bleu-clair { border-color: var(--bleu-clair); }
+        .border-bleu-accent { border-color: var(--bleu-accent); }
+        .border-bleu-pale { border-color: var(--bleu-pale); }
+
+        .transition-all { transition: var(--transition); }
+        .transition-bounce { transition: var(--transition-bounce); }
+
+        .shadow-md { box-shadow: var(--shadow-md); }
+        .shadow-lg { box-shadow: var(--shadow-lg); }
+
+        .page {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            width: 100%;
+            transition: var(--transition);
+        }
+
+        .page.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group input {
+            transition: var(--transition);
+        }
+
+        .input-group input:focus ~ label,
+        .input-group input:not(:placeholder-shown) ~ label {
+            transform: translateY(-1.5rem) scale(0.85);
+            color: var(--bleu-accent);
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 1rem;
+            top: 0.8rem;
+            color: var(--bleu-moyen);
+            background-color: white;
+            padding: 0 0.25rem;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 0.8rem;
+            cursor: pointer;
+            color: var(--bleu-moyen);
+        }
+
+        .strength-meter {
+            height: 4px;
+            background-color: #e0e0e0;
+            margin-top: 0.5rem;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-meter-fill {
+            height: 100%;
+            width: 0%;
+            transition: var(--transition);
+        }
+
+        .strength-0 .strength-meter-fill {
+            width: 20%;
+            background-color: #ff4444;
+        }
+
+        .strength-1 .strength-meter-fill {
+            width: 40%;
+            background-color: #ffbb33;
+        }
+
+        .strength-2 .strength-meter-fill {
+            width: 60%;
+            background-color: #ffbb33;
+        }
+
+        .strength-3 .strength-meter-fill {
+            width: 80%;
+            background-color: #00C851;
+        }
+
+        .strength-4 .strength-meter-fill {
+            width: 100%;
+            background-color: #00C851;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .input-error {
+            border-color: #ff4444 !important;
+        }
+
+        .input-error ~ label {
+            color: #ff4444 !important;
+        }
+
+        .floating-btn {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .google-btn {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            color: #4285F4;
+            transition: var(--transition);
+        }
+
+        .google-btn:hover {
+            background-color: #f8f9fa;
+            border-color: #d2d6db;
+            color: #3367D6;
+        }
+        
+        #loginplace {
+            position: fixed;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .overlay-login {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+
+    <div class="overlay-login" id="loginOverlay"></div>
+    
+    <div class="relative w-full max-w-md" id="loginplace">
+        <!-- Bouton flottant pour basculer entre connexion et inscription -->
+        <button id="toggleAuth" class="floating-btn absolute -top-16 right-0 bg-bleu-accent text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-50 transition-bounce hover:bg-bleu-moyen">
+            <i class="fas fa-user-plus text-xl"></i>
+        </button>
+
+        <!-- Page de Connexion -->
+        <div id="loginPage" class="page active bg-white rounded-2xl shadow-lg p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-bleu-fonce mb-2">Content de vous revoir</h1>
+                <p class="text-bleu-moyen">Connectez-vous pour accéder à votre compte</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div class="input-group">
+                    <input name="email" type="email" id="loginEmail" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="loginEmail">Adresse email</label>
+                    <div class="error-message" id="loginEmailError">Veuillez entrer une adresse email valide</div>
+                </div>
+
+                <div class="input-group">
+                    <input name="mdp" type="password" id="loginPassword" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="loginPassword">Mot de passe</label>
+                    <i class="fas fa-eye password-toggle" id="toggleLoginPassword"></i>
+                    <div class="error-message" id="loginPasswordError">Le mot de passe doit contenir au moins 6 caractères</div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="rememberMe" class="w-4 h-4 text-bleu-accent rounded focus:ring-bleu-accent border-bleu-pale">
+                        <label for="rememberMe" class="ml-2 text-sm text-bleu-moyen">Se souvenir de moi</label>
+                    </div>
+                    <a href="#" class="text-sm text-bleu-accent hover:text-bleu-fonce transition-all">Mot de passe oublié?</a>
+                </div>
+
+                <button type="submit" class="w-full bg-bleu-accent text-white py-3 rounded-lg font-medium shadow-md hover:bg-bleu-moyen transition-all focus:outline-none focus:ring-2 focus:ring-bleu-accent focus:ring-opacity-50">
+                    Se connecter
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-bleu-moyen">Pas encore de compte? <button id="switchToRegister" class="text-bleu-accent font-medium hover:text-bleu-fonce transition-all">S'inscrire</button></p>
+            </div>
+
+            <div class="mt-8">
+                <div class="relative flex items-center">
+                    <div class="flex-grow border-t border-bleu-pale"></div>
+                    <span class="flex-shrink mx-4 text-bleu-moyen">Ou connectez-vous avec</span>
+                    <div class="flex-grow border-t border-bleu-pale"></div>
+                </div>
+
+                <div class="flex justify-center mt-4" id="fermer_LoginBtn">
+                    <button class="google-btn w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+                        <p>Fermer</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page d'Inscription -->
+        <div id="registerPage" class="page bg-white rounded-2xl shadow-lg p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-bleu-fonce mb-2">Créez votre compte</h1>
+                <p class="text-bleu-moyen">Rejoignez notre communauté dès maintenant</p>
+            </div>
+
+            <form id="registerForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <input type="text" name="prenom" id="firstName" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                        <label for="firstName">Prénom</label>
+                        <div class="error-message" id="firstNameError">Veuillez entrer votre prénom</div>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" name="nom" id="lastName" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                        <label for="lastName">Nom</label>
+                        <div class="error-message" id="lastNameError">Veuillez entrer votre nom</div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" name="email" id="registerEmail" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="registerEmail">Adresse email</label>
+                    <div class="error-message" id="registerEmailError">Veuillez entrer une adresse email valide</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="mdp" id="registerPassword" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="registerPassword">Mot de passe</label>
+                    <i class="fas fa-eye password-toggle" id="toggleRegisterPassword"></i>
+                    <div class="strength-meter">
+                        <div class="strength-meter-fill"></div>
+                    </div>
+                    <div class="error-message" id="registerPasswordError">Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="mdpv" id="confirmPassword" class="w-full px-4 py-3 rounded-lg border-2 border-bleu-pale focus:border-bleu-accent focus:outline-none" placeholder=" " required>
+                    <label for="confirmPassword">Confirmez le mot de passe</label>
+                    <i class="fas fa-eye password-toggle" id="toggleConfirmPassword"></i>
+                    <div class="error-message" id="confirmPasswordError">Les mots de passe ne correspondent pas</div>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="acceptTerms" class="w-4 h-4 text-bleu-accent rounded focus:ring-bleu-accent border-bleu-pale" required>
+                    <label for="acceptTerms" class="ml-2 text-sm text-bleu-moyen">J'accepte les <a href="#" class="text-bleu-accent hover:text-bleu-fonce transition-all">conditions d'utilisation</a></label>
+                </div>
+                <div class="error-message" id="termsError">Vous devez accepter les conditions</div>
+
+                <button name="inscrir" type='submit' class="w-full bg-bleu-accent text-white py-3 rounded-lg font-medium shadow-md hover:bg-bleu-moyen transition-all focus:outline-none focus:ring-2 focus:ring-bleu-accent focus:ring-opacity-50">
+                    S'inscrire
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-bleu-moyen">Déjà un compte? <button id="switchToLogin" class="text-bleu-accent font-medium hover:text-bleu-fonce transition-all">Se connecter</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialisation des éléments
+            const userMenuButton = document.getElementById('userMenuButton');
+            const loginPlace = document.getElementById('loginplace');
+            const loginOverlay = document.getElementById('loginOverlay');
+            const closeBtn = document.getElementById('fermer_LoginBtn');
+            const openBtn = document.getElementById('LoginBtn');
+            const deconnexion = document.getElementById('deconnexion');
+            const userNameDisplay = document.getElementById('userNameDisplay');
+            
+            // Gestion de la connexion/déconnexion
+            function updateUI() {
+                const userData = localStorage.getItem('USER');
+                
+                if (userData) {
+                    try {
+                        const user = JSON.parse(userData);
+                        
+                        // ✅ CONNECTÉ
+                        loginPlace.style.display = 'none';
+                        loginOverlay.style.display = 'none';
+                        deconnexion.style.display = 'block';
+                        openBtn.style.display = 'none';
+                        
+                        // Afficher le nom de l'utilisateur connecté
+                        if (userNameDisplay) {
+                            if (user.prenom && user.nom) {
+                                userNameDisplay.textContent = `${user.prenom} ${user.nom}`;
+                            } else if (user.prenom) {
+                                userNameDisplay.textContent = user.prenom;
+                            } else if (user.nom) {
+                                userNameDisplay.textContent = user.nom;
+                            } else if (user.email) {
+                                // Extraire le nom d'utilisateur de l'email
+                                userNameDisplay.textContent = user.email.split('@')[0];
+                            } else {
+                                userNameDisplay.textContent = 'Utilisateur';
+                            }
+                            
+                            // Ajouter une classe pour styliser le nom si besoin
+                            userNameDisplay.classList.remove('text-gray-700');
+                            userNameDisplay.classList.add('text-indigo-600', 'font-medium');
+                        }
+                    } catch (e) {
+                        console.error('Erreur lors du parsing des données utilisateur:', e);
+                        // En cas d'erreur, afficher "Admin"
+                        if (userNameDisplay) {
+                            userNameDisplay.textContent = 'Admin';
+                            userNameDisplay.classList.remove('text-indigo-600', 'font-medium');
+                            userNameDisplay.classList.add('text-gray-700');
+                        }
+                    }
+                } else {
+                    // ❌ NON CONNECTÉ
+                    loginPlace.style.display = 'block';
+                    loginOverlay.style.display = 'block';
+                    deconnexion.style.display = 'none';
+                    openBtn.style.display = 'block';
+                    
+                    // Afficher "Admin" quand déconnecté
+                    if (userNameDisplay) {
+                        userNameDisplay.textContent = 'Menu';
+                        userNameDisplay.classList.remove('text-indigo-600', 'font-medium');
+                        userNameDisplay.classList.add('text-gray-700');
+                    }
+                }
+            }
+            
+            // Fonction pour afficher les toasts
+            function showToast({
+                message,
+                type = "info",
+                duration = 4000
+            }) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                
+                const icon = {
+                    success: 'fa-circle-check',
+                    error: 'fa-circle-xmark',
+                    info: 'fa-circle-info'
+                }[type];
+                
+                toast.innerHTML = `
+                    <i class="fas ${icon}"></i>
+                    <span class="flex-1 text-sm">${message}</span>
+                    <span class="toast-close"><i class="fas fa-times"></i></span>
+                    <div class="toast-progress" style="animation-duration:${duration}ms"></div>
+                `;
+                
+                container.appendChild(toast);
+                
+                // Fermeture manuelle
+                toast.querySelector('.toast-close').onclick = () => closeToast(toast);
+                
+                // Auto close
+                setTimeout(() => closeToast(toast), duration);
+                
+                function closeToast(el) {
+                    el.style.animation = 'slideOut 0.3s ease forwards';
+                    setTimeout(() => el.remove(), 300);
+                }
+            }
+            
+            // Inscription
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Nettoyage ancien état
+                    document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+                    
+                    const formData = new FormData(registerForm);
+                    
+                    fetch('ajax/register.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.ok) {
+                            Object.entries(data.errors).forEach(([field, message]) => {
+                                showToast({
+                                    message,
+                                    type: "error"
+                                });
+                                
+                                const input = registerForm.querySelector(`[name="${field}"]`);
+                                const error = document.getElementById(field + 'Error');
+                                
+                                if (input) input.classList.add('input-error');
+                                if (error) {
+                                    error.textContent = message;
+                                    error.style.display = 'block';
+                                }
+                            });
+                            return;
+                        }
+                        
+                        // ✅ SUCCÈS
+                        showToast({
+                            message: data.message,
+                            type: "success",
+                            duration: 5000
+                        });
+                        
+                        registerForm.reset();
+                        togglePages();
+                    })
+                    .catch((e) => {
+                        showToast({
+                            message: "Erreur serveur",
+                            type: "error"
+                        });
+                    });
+                });
+            }
+            
+            // Connexion
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Reset erreurs
+                    document.querySelectorAll('.error-message').forEach(el => {
+                        el.style.display = 'none';
+                        el.textContent = '';
+                    });
+                    
+                    document.querySelectorAll('.input-error')
+                        .forEach(el => el.classList.remove('input-error'));
+                    
+                    const formData = new FormData(loginForm);
+                    
+                    fetch('ajax/login.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.ok) {
+                            Object.entries(data.errors).forEach(([field, message]) => {
+                                showToast({
+                                    message,
+                                    type: "error"
+                                });
+                                
+                                const input = loginForm.querySelector(`[name="${field}"]`);
+                                const error = document.getElementById(field + 'Error');
+                                
+                                if (input) input.classList.add('input-error');
+                                if (error) {
+                                    error.textContent = message;
+                                    error.style.display = 'block';
+                                }
+                            });
+                            return;
+                        }
+                        
+                        // ✅ SUCCÈS LOGIN
+                        localStorage.setItem('USER', JSON.stringify(data.user));
+                        
+                        showToast({
+                            message: data.message,
+                            type: "success"
+                        });
+                        
+                        updateUI(); // Mettre à jour l'interface avec le nom
+                    })
+                    .catch(() => {
+                        showToast({
+                            message: "Erreur serveur",
+                            type: "error"
+                        });
+                    });
+                });
+            }
+            
+            // Déconnexion
+            if (deconnexion) {
+                deconnexion.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('USER');
+                    showToast({
+                        message: "Déconnexion réussie",
+                        type: "success"
+                    });
+                    updateUI(); // Mettre à jour l'interface
+                });
+            }
+            
+            // Ouvrir/fermer le formulaire de connexion
+            if (openBtn) {
+                openBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loginPlace.style.display = 'block';
+                    loginOverlay.style.display = 'block';
+                });
+            }
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loginPlace.style.display = 'none';
+                    loginOverlay.style.display = 'none';
+                });
+            }
+            
+            // Gestion du toggle entre connexion/inscription
+            const loginPage = document.getElementById('loginPage');
+            const registerPage = document.getElementById('registerPage');
+            const toggleAuth = document.getElementById('toggleAuth');
+            const switchToRegister = document.getElementById('switchToRegister');
+            const switchToLogin = document.getElementById('switchToLogin');
+            
+            function togglePages() {
+                if (loginPage && registerPage) {
+                    loginPage.classList.toggle('active');
+                    registerPage.classList.toggle('active');
+                    
+                    if (registerPage.classList.contains('active')) {
+                        toggleAuth.innerHTML = '<i class="fas fa-sign-in-alt text-xl"></i>';
+                        toggleAuth.setAttribute('title', 'Se connecter');
+                    } else {
+                        toggleAuth.innerHTML = '<i class="fas fa-user-plus text-xl"></i>';
+                        toggleAuth.setAttribute('title', 'S\'inscrire');
+                    }
+                }
+            }
+            
+            if (toggleAuth) toggleAuth.addEventListener('click', togglePages);
+            if (switchToRegister) switchToRegister.addEventListener('click', togglePages);
+            if (switchToLogin) switchToLogin.addEventListener('click', togglePages);
+            
+            // Gestion des mots de passe
+            function setupPasswordToggle(inputId, toggleId) {
+                const passwordInput = document.getElementById(inputId);
+                const toggleButton = document.getElementById(toggleId);
+                
+                if (passwordInput && toggleButton) {
+                    toggleButton.addEventListener('click', function() {
+                        if (passwordInput.type === 'password') {
+                            passwordInput.type = 'text';
+                            toggleButton.classList.replace('fa-eye', 'fa-eye-slash');
+                        } else {
+                            passwordInput.type = 'password';
+                            toggleButton.classList.replace('fa-eye-slash', 'fa-eye');
+                        }
+                    });
+                }
+            }
+            
+            setupPasswordToggle('loginPassword', 'toggleLoginPassword');
+            setupPasswordToggle('registerPassword', 'toggleRegisterPassword');
+            setupPasswordToggle('confirmPassword', 'toggleConfirmPassword');
+            
+            // Validation du mot de passe
+            const registerPassword = document.getElementById('registerPassword');
+            if (registerPassword) {
+                const strengthMeter = registerPassword.parentElement.querySelector('.strength-meter');
+                if (strengthMeter) {
+                    registerPassword.addEventListener('input', function() {
+                        const password = registerPassword.value;
+                        const strength = calculatePasswordStrength(password);
+                        strengthMeter.className = 'strength-meter strength-' + strength;
+                    });
+                }
+            }
+            
+            function calculatePasswordStrength(password) {
+                let strength = 0;
+                if (password.length >= 8) strength++;
+                if (/[A-Z]/.test(password)) strength++;
+                if (/[0-9]/.test(password)) strength++;
+                if (/[^A-Za-z0-9]/.test(password)) strength++;
+                if (password.length >= 12) strength++;
+                return Math.min(strength, 4);
+            }
+            
+            // Toggle mobile sidebar
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay1 = document.querySelector('.overlay1');
+            
+            if (sidebarToggle && sidebar && overlay1) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                    overlay1.classList.toggle('open');
+                });
+            }
+            
+            // Toggle user dropdown menu
+            if (userMenuButton) {
+                userMenuButton.addEventListener('click', function() {
+                    const userMenu = document.getElementById('userMenu');
+                    if (userMenu) {
+                        userMenu.classList.toggle('hidden');
+                    }
+                });
+            }
+            
+            // Fermer le dropdown quand on clique ailleurs
+            document.addEventListener('click', function(event) {
+                const userMenu = document.getElementById('userMenu');
+                if (userMenu && userMenuButton && !userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+            
+            // Initialiser l'interface
+            updateUI();
+        });
+    </script>
+</body>
+</html>

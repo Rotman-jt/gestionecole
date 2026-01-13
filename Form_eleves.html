@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Élève - GESCHOOL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #22c55e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-container {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-indicator {
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: -1;
+        }
+
+        .step {
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background-color: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step.completed {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        .input-group.error input,
+        .input-group.error select,
+        .input-group.error textarea {
+            border-color: var(--danger);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .input-group.error .error-message {
+            display: block;
+        }
+
+        .required::after {
+            content: " *";
+            color: var(--danger);
+        }
+
+        .photo-upload {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .photo-upload img {
+            transition: transform 0.3s ease;
+        }
+
+        .photo-upload:hover img {
+            transform: scale(1.05);
+        }
+
+        .tab-content {
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(107, 114, 128, 0.4);
+        }
+
+        .toast {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auto-complete {
+            position: absolute;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .auto-complete-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .auto-complete-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+            transition: width 0.3s ease;
+        }
+
+        /* Animations pour les étapes */
+        .step-enter {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+
+        .step-enter-active {
+            opacity: 1;
+            transform: translateX(0);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .step-exit {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .step-exit-active {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .form-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+            
+            .step-indicator::before {
+                display: none;
+            }
+            
+            .step {
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm"></div>
+
+    <div class="container mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center space-x-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
+                    <i class="fas fa-user-graduate text-white text-xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800">Inscription Élève</h1>
+            </div>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Remplissez ce formulaire pour inscrire un nouvel élève. Tous les champs marqués d'un astérisque (*) sont obligatoires.
+            </p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="max-w-4xl mx-auto glass-effect rounded-2xl shadow-2xl overflow-hidden form-container">
+            <!-- Progress Bar -->
+            <div class="progress-bar" id="progressBar" style="width: 20%"></div>
+
+            <!-- Steps Indicator -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="step-indicator flex justify-between items-center">
+                    <div class="step w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-700 font-medium relative group" data-step="1">
+                        <span>1</span>
+                        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs text-gray-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                            Informations Personnelles
+                        </div>
+                    </div>
+                    <div class="step w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-700 font-medium relative group" data-step="2">
+                        <span>2</span>
+                        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs text-gray-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                            Informations Scolaires
+                        </div>
+                    </div>
+                    <div class="step w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-700 font-medium relative group" data-step="3">
+                        <span>3</span>
+                        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs text-gray-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                            Informations Familiales
+                        </div>
+                    </div>
+                    <div class="step w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-700 font-medium relative group" data-step="4">
+                        <span>4</span>
+                        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs text-gray-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                            Documents & Validation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Content -->
+            <form id="studentForm" class="p-6" novalidate>
+                <!-- Step 1: Informations Personnelles -->
+                <div class="step-content active" data-step="1">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                            <i class="fas fa-user-circle text-indigo-500 mr-2"></i>
+                            Informations Personnelles
+                        </h2>
+                        <p class="text-gray-600">Renseignez les informations d'identité de l'élève</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Photo Section -->
+                        <div class="lg:col-span-1">
+                            <div class="photo-upload relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50" id="photoUpload">
+                                <input type="file" id="studentPhoto" name="photo" accept="image/*" class="hidden">
+                                <div id="photoPreview" class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                                    <div class="w-full h-full bg-gradient-to-r from-indigo-100 to-purple-100 flex items-center justify-center">
+                                        <i class="fas fa-camera text-gray-400 text-3xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-2">Cliquez pour télécharger une photo</p>
+                                <p class="text-xs text-gray-500">JPG, PNG - Max 2MB</p>
+                                <div class="error-message mt-2" id="photoError"></div>
+                            </div>
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="lg:col-span-2">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="input-group">
+                                    <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        <i class="fas fa-user text-gray-400 mr-1"></i>
+                                        Nom de famille
+                                    </label>
+                                    <input type="text" id="lastName" name="lastName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Dupont" required>
+                                    <div class="error-message" id="lastNameError">Veuillez saisir le nom de famille</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        <i class="fas fa-user text-gray-400 mr-1"></i>
+                                        Prénom(s)
+                                    </label>
+                                    <input type="text" id="firstName" name="firstName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Jean" required>
+                                    <div class="error-message" id="firstNameError">Veuillez saisir le prénom</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="birthDate" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        <i class="fas fa-birthday-cake text-gray-400 mr-1"></i>
+                                        Date de naissance
+                                    </label>
+                                    <input type="date" id="birthDate" name="birthDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" required>
+                                    <div class="text-sm text-gray-500 mt-1" id="ageDisplay"></div>
+                                    <div class="error-message" id="birthDateError">Veuillez saisir la date de naissance</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="birthPlace" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i>
+                                        Lieu de naissance
+                                    </label>
+                                    <input type="text" id="birthPlace" name="birthPlace" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Paris, France" required>
+                                    <div class="error-message" id="birthPlaceError">Veuillez saisir le lieu de naissance</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        <i class="fas fa-venus-mars text-gray-400 mr-1"></i>
+                                        Sexe
+                                    </label>
+                                    <select id="gender" name="gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" required>
+                                        <option value="">Sélectionner...</option>
+                                        <option value="M">Masculin</option>
+                                        <option value="F">Féminin</option>
+                                    </select>
+                                    <div class="error-message" id="genderError">Veuillez sélectionner le sexe</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="nationality" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        <i class="fas fa-flag text-gray-400 mr-1"></i>
+                                        Nationalité
+                                    </label>
+                                    <input type="text" id="nationality" name="nationality" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Française" required>
+                                    <div class="error-message" id="nationalityError">Veuillez saisir la nationalité</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Informations Scolaires -->
+                <div class="step-content hidden" data-step="2">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                            <i class="fas fa-graduation-cap text-indigo-500 mr-2"></i>
+                            Informations Scolaires
+                        </h2>
+                        <p class="text-gray-600">Détails sur la scolarité et l'inscription</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="input-group">
+                            <label for="matricule" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                <i class="fas fa-id-card text-gray-400 mr-1"></i>
+                                Numéro matricule
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="matricule" name="matricule" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Génération automatique" readonly>
+                                <button type="button" id="generateMatricule" class="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-indigo-100 text-indigo-600 rounded text-sm hover:bg-indigo-200 transition-colors">
+                                    <i class="fas fa-sync-alt mr-1"></i>Générer
+                                </button>
+                            </div>
+                            <div class="error-message" id="matriculeError">Le matricule est requis</div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="admissionDate" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                <i class="fas fa-calendar-alt text-gray-400 mr-1"></i>
+                                Date d'admission
+                            </label>
+                            <input type="date" id="admissionDate" name="admissionDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" required>
+                            <div class="error-message" id="admissionDateError">Veuillez saisir la date d'admission</div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="niveau" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                <i class="fas fa-chalkboard-teacher text-gray-400 mr-1"></i>
+                                Niveau / Classe
+                            </label>
+                            <select id="niveau" name="niveau" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" required>
+                                <option value="">Sélectionner...</option>
+                                <optgroup label="Primaire">
+                                    <option value="CP">CP - Cours Préparatoire</option>
+                                    <option value="CE1">CE1 - Cours Élémentaire 1</option>
+                                    <option value="CE2">CE2 - Cours Élémentaire 2</option>
+                                    <option value="CM1">CM1 - Cours Moyen 1</option>
+                                    <option value="CM2">CM2 - Cours Moyen 2</option>
+                                </optgroup>
+                                <optgroup label="Collège">
+                                    <option value="6e">6ème</option>
+                                    <option value="5e">5ème</option>
+                                    <option value="4e">4ème</option>
+                                    <option value="3e">3ème</option>
+                                </optgroup>
+                                <optgroup label="Lycée">
+                                    <option value="2nde">Seconde</option>
+                                    <option value="1ere">Première</option>
+                                    <option value="Terminale">Terminale</option>
+                                </optgroup>
+                            </select>
+                            <div class="error-message" id="niveauError">Veuillez sélectionner le niveau</div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="serie" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-book text-gray-400 mr-1"></i>
+                                Série / Spécialité
+                            </label>
+                            <select id="serie" name="serie" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all">
+                                <option value="">Non applicable</option>
+                                <option value="S">Scientifique (S)</option>
+                                <option value="ES">Économique et Social (ES)</option>
+                                <option value="L">Littéraire (L)</option>
+                                <option value="STMG">STMG</option>
+                                <option value="STI2D">STI2D</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="anneeScolaire" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                                Année scolaire
+                            </label>
+                            <select id="anneeScolaire" name="anneeScolaire" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="2023-2024">2023-2024</option>
+                                <option value="2024-2025">2024-2025</option>
+                                <option value="2025-2026">2025-2026</option>
+                                <option value="2026-2027">2026-2027</option>
+                            </select>
+                            <div class="error-message" id="anneeScolaireError">Veuillez sélectionner l'année scolaire</div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="statut" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                <i class="fas fa-user-check text-gray-400 mr-1"></i>
+                                Statut
+                            </label>
+                            <select id="statut" name="statut" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="actif">Actif</option>
+                                <option value="nouveau">Nouveau</option>
+                                <option value="redoublant">Redoublant</option>
+                                <option value="transfert">Transfert</option>
+                            </select>
+                            <div class="error-message" id="statutError">Veuillez sélectionner le statut</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Informations Familiales -->
+                <div class="step-content hidden" data-step="3">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                            <i class="fas fa-users text-indigo-500 mr-2"></i>
+                            Informations Familiales
+                        </h2>
+                        <p class="text-gray-600">Coordonnées des parents ou tuteurs légaux</p>
+                    </div>
+
+                    <div class="space-y-8">
+                        <!-- Parent 1 -->
+                        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-user-circle text-indigo-500 mr-2"></i>
+                                Parent / Tuteur 1
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="input-group">
+                                    <label for="parent1Nom" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        Nom complet
+                                    </label>
+                                    <input type="text" id="parent1Nom" name="parent1Nom" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Nom et prénom" required>
+                                    <div class="error-message" id="parent1NomError">Veuillez saisir le nom du parent</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="parent1Lien" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        Lien de parenté
+                                    </label>
+                                    <select id="parent1Lien" name="parent1Lien" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" required>
+                                        <option value="">Sélectionner...</option>
+                                        <option value="pere">Père</option>
+                                        <option value="mere">Mère</option>
+                                        <option value="tuteur">Tuteur légal</option>
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                    <div class="error-message" id="parent1LienError">Veuillez sélectionner le lien de parenté</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="parent1Tel" class="block text-sm font-medium text-gray-700 mb-2 required">
+                                        Téléphone
+                                    </label>
+                                    <input type="tel" id="parent1Tel" name="parent1Tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="01 23 45 67 89" required>
+                                    <div class="error-message" id="parent1TelError">Veuillez saisir un numéro de téléphone valide</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="parent1Email" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Email
+                                    </label>
+                                    <input type="email" id="parent1Email" name="parent1Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="parent@example.com">
+                                    <div class="error-message" id="parent1EmailError">Veuillez saisir un email valide</div>
+                                </div>
+
+                                <div class="input-group md:col-span-2">
+                                    <label for="parent1Profession" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Profession
+                                    </label>
+                                    <input type="text" id="parent1Profession" name="parent1Profession" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Profession">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Parent 2 -->
+                        <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-user-circle text-blue-500 mr-2"></i>
+                                Parent / Tuteur 2 (Optionnel)
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="input-group">
+                                    <label for="parent2Nom" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Nom complet
+                                    </label>
+                                    <input type="text" id="parent2Nom" name="parent2Nom" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="Nom et prénom">
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="parent2Lien" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Lien de parenté
+                                    </label>
+                                    <select id="parent2Lien" name="parent2Lien" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all">
+                                        <option value="">Sélectionner...</option>
+                                        <option value="pere">Père</option>
+                                        <option value="mere">Mère</option>
+                                        <option value="tuteur">Tuteur légal</option>
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="parent2Tel" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Téléphone
+                                    </label>
+                                    <input type="tel" id="parent2Tel" name="parent2Tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="01 23 45 67 89">
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="parent2Email" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Email
+                                    </label>
+                                    <input type="email" id="parent2Email" name="parent2Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all" placeholder="parent@example.com">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Documents & Validation -->
+                <div class="step-content hidden" data-step="4">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                            <i class="fas fa-file-alt text-indigo-500 mr-2"></i>
+                            Documents & Validation
+                        </h2>
+                        <p class="text-gray-600">Téléchargez les documents requis et finalisez l'inscription</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Documents à fournir -->
+                        <div class="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-paperclip text-gray-400 mr-2"></i>
+                                Documents à fournir
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="document-item flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <i class="fas fa-file-pdf text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-700">Acte de naissance</span>
+                                            <p class="text-sm text-gray-500">Format PDF, JPG ou PNG</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input type="file" id="acteNaissance" name="acteNaissance" accept=".pdf,.jpg,.jpeg,.png" class="hidden">
+                                        <button type="button" onclick="document.getElementById('acteNaissance').click()" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
+                                            <i class="fas fa-upload mr-2"></i>Télécharger
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="document-item flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                            <i class="fas fa-file-image text-green-600"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-700">Photo d'identité</span>
+                                            <p class="text-sm text-gray-500">Format JPG ou PNG</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input type="file" id="photoIdentite" name="photoIdentite" accept=".jpg,.jpeg,.png" class="hidden">
+                                        <button type="button" onclick="document.getElementById('photoIdentite').click()" class="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors">
+                                            <i class="fas fa-upload mr-2"></i>Télécharger
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="document-item flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                            <i class="fas fa-file-medical text-purple-600"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-700">Certificat médical</span>
+                                            <p class="text-sm text-gray-500">Format PDF, JPG ou PNG</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input type="file" id="certificatMedical" name="certificatMedical" accept=".pdf,.jpg,.jpeg,.png" class="hidden">
+                                        <button type="button" onclick="document.getElementById('certificatMedical').click()" class="px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors">
+                                            <i class="fas fa-upload mr-2"></i>Télécharger
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Récapitulatif -->
+                        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-clipboard-check text-indigo-500 mr-2"></i>
+                                Récapitulatif
+                            </h3>
+                            <div class="space-y-3" id="recapContainer">
+                                <!-- Les données seront insérées ici par JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Conditions -->
+                        <div class="bg-white rounded-xl border border-gray-200 p-6">
+                            <div class="flex items-start space-x-3">
+                                <input type="checkbox" id="acceptConditions" name="acceptConditions" class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" required>
+                                <label for="acceptConditions" class="text-sm text-gray-700">
+                                    Je certifie que les informations fournies sont exactes et complètes. J'accepte les 
+                                    <a href="#" class="text-indigo-600 hover:text-indigo-800 hover:underline">conditions générales</a> 
+                                    et la 
+                                    <a href="#" class="text-indigo-600 hover:text-indigo-800 hover:underline">politique de confidentialité</a>.
+                                </label>
+                            </div>
+                            <div class="error-message mt-2" id="conditionsError">Vous devez accepter les conditions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between items-center pt-8 border-t border-gray-200 mt-8">
+                    <button type="button" id="prevBtn" class="btn-secondary px-6 py-3 rounded-lg font-medium hidden">
+                        <i class="fas fa-arrow-left mr-2"></i>Précédent
+                    </button>
+                    
+                    <div class="ml-auto flex space-x-3">
+                        <button type="button" id="saveDraft" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Enregistrer brouillon
+                        </button>
+                        <button type="button" id="nextBtn" class="btn-primary px-6 py-3 rounded-lg font-medium text-white">
+                            Suivant
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                        <button type="submit" id="submitBtn" class="btn-primary px-6 py-3 rounded-lg font-medium text-white hidden">
+                            <i class="fas fa-check-circle mr-2"></i>Terminer l'inscription
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-500 text-sm">
+            <p>© 2024 GESCHOOL - Système de Gestion Scolaire. Tous droits réservés.</p>
+            <p class="mt-1">Pour toute assistance, contactez le support technique : support@geschool.edu</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables globales
+            let currentStep = 1;
+            const totalSteps = 4;
+            const form = document.getElementById('studentForm');
+            const stepContents = document.querySelectorAll('.step-content');
+            const steps = document.querySelectorAll('.step');
+            const progressBar = document.getElementById('progressBar');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const saveDraftBtn = document.getElementById('saveDraft');
+            const generateMatriculeBtn = document.getElementById('generateMatricule');
+            const matriculeInput = document.getElementById('matricule');
+            const birthDateInput = document.getElementById('birthDate');
+            const ageDisplay = document.getElementById('ageDisplay');
+            const photoUpload = document.getElementById('photoUpload');
+            const studentPhoto = document.getElementById('studentPhoto');
+            const photoPreview = document.getElementById('photoPreview');
+            const recapContainer = document.getElementById('recapContainer');
+
+            // Initialisation
+            updateProgress();
+            updateNavigation();
+            loadDraft();
+            setupEventListeners();
+
+            function setupEventListeners() {
+                // Navigation
+                prevBtn.addEventListener('click', prevStep);
+                nextBtn.addEventListener('click', nextStep);
+                submitBtn.addEventListener('click', submitForm);
+                saveDraftBtn.addEventListener('click', saveDraft);
+
+                // Photo upload
+                photoUpload.addEventListener('click', () => studentPhoto.click());
+                studentPhoto.addEventListener('change', handlePhotoUpload);
+
+                // Matricule generation
+                generateMatriculeBtn.addEventListener('click', generateMatricule);
+
+                // Age calculation
+                birthDateInput.addEventListener('change', updateAge);
+
+                // File input changes
+                document.querySelectorAll('input[type="file"]').forEach(input => {
+                    input.addEventListener('change', function() {
+                        const button = this.previousElementSibling;
+                        if (this.files.length > 0) {
+                            button.innerHTML = '<i class="fas fa-check mr-2"></i>Téléchargé';
+                            button.classList.remove('bg-blue-100', 'text-blue-600');
+                            button.classList.add('bg-green-100', 'text-green-600');
+                        }
+                    });
+                });
+
+                // Auto-validate on blur
+                document.querySelectorAll('input, select, textarea').forEach(field => {
+                    field.addEventListener('blur', () => validateField(field));
+                });
+
+                // Real-time validation for required fields
+                document.querySelectorAll('[required]').forEach(field => {
+                    field.addEventListener('input', () => {
+                        if (field.value.trim()) {
+                            clearError(field);
+                        }
+                    });
+                });
+            }
+
+            // Gestion des étapes
+            function updateProgress() {
+                const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+                progressBar.style.width = `${progress}%`;
+
+                // Mettre à jour les indicateurs d'étape
+                steps.forEach((step, index) => {
+                    const stepNumber = parseInt(step.dataset.step);
+                    step.classList.remove('active', 'completed');
+                    
+                    if (stepNumber < currentStep) {
+                        step.classList.add('completed');
+                    } else if (stepNumber === currentStep) {
+                        step.classList.add('active');
+                    }
+                });
+
+                // Mettre à jour le récapitulatif
+                if (currentStep === totalSteps) {
+                    updateRecap();
+                }
+            }
+
+            function updateNavigation() {
+                prevBtn.classList.toggle('hidden', currentStep === 1);
+                nextBtn.classList.toggle('hidden', currentStep === totalSteps);
+                submitBtn.classList.toggle('hidden', currentStep !== totalSteps);
+
+                // Changer le texte du bouton suivant sur la dernière étape
+                if (currentStep === totalSteps - 1) {
+                    nextBtn.innerHTML = 'Vérifier et terminer <i class="fas fa-check ml-2"></i>';
+                } else {
+                    nextBtn.innerHTML = 'Suivant <i class="fas fa-arrow-right ml-2"></i>';
+                }
+            }
+
+            function showStep(step) {
+                stepContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (parseInt(content.dataset.step) === step) {
+                        content.classList.add('active');
+                        setTimeout(() => {
+                            content.style.opacity = 1;
+                            content.style.transform = 'translateX(0)';
+                        }, 10);
+                    }
+                });
+            }
+
+            function nextStep() {
+                if (validateStep(currentStep)) {
+                    if (currentStep < totalSteps) {
+                        currentStep++;
+                        showStep(currentStep);
+                        updateProgress();
+                        updateNavigation();
+                    }
+                }
+            }
+
+            function prevStep() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    showStep(currentStep);
+                    updateProgress();
+                    updateNavigation();
+                }
+            }
+
+            // Validation
+            function validateStep(step) {
+                let isValid = true;
+                const stepContent = document.querySelector(`.step-content[data-step="${step}"]`);
+                const requiredFields = stepContent.querySelectorAll('[required]');
+
+                requiredFields.forEach(field => {
+                    if (!validateField(field)) {
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    showToast('Veuillez corriger les erreurs avant de continuer', 'error');
+                }
+
+                return isValid;
+            }
+
+            function validateField(field) {
+                const value = field.value.trim();
+                const errorElement = document.getElementById(`${field.id}Error`);
+                const inputGroup = field.closest('.input-group');
+
+                // Supprimer les erreurs précédentes
+                if (inputGroup) {
+                    inputGroup.classList.remove('error');
+                }
+
+                // Validation de base pour les champs requis
+                if (field.hasAttribute('required') && !value) {
+                    showError(field, 'Ce champ est obligatoire');
+                    return false;
+                }
+
+                // Validation spécifique par type
+                switch (field.type) {
+                    case 'email':
+                        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                            showError(field, 'Email invalide');
+                            return false;
+                        }
+                        break;
+                    case 'tel':
+                        if (value && !/^[0-9\s\-\(\)\.\+]{10,}$/.test(value)) {
+                            showError(field, 'Numéro de téléphone invalide');
+                            return false;
+                        }
+                        break;
+                    case 'date':
+                        if (value) {
+                            const date = new Date(value);
+                            if (date > new Date()) {
+                                showError(field, 'Date future non autorisée');
+                                return false;
+                            }
+                        }
+                        break;
+                }
+
+                // Validation spécifique pour certains champs
+                switch (field.id) {
+                    case 'birthDate':
+                        if (value) {
+                            const birthDate = new Date(value);
+                            const age = calculateAge(birthDate);
+                            if (age < 3 || age > 25) {
+                                showError(field, 'L\'âge doit être entre 3 et 25 ans');
+                                return false;
+                            }
+                        }
+                        break;
+                }
+
+                return true;
+            }
+
+            function showError(field, message) {
+                const errorElement = document.getElementById(`${field.id}Error`);
+                const inputGroup = field.closest('.input-group');
+
+                if (inputGroup) {
+                    inputGroup.classList.add('error');
+                }
+
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                }
+
+                field.focus();
+            }
+
+            function clearError(field) {
+                const errorElement = document.getElementById(`${field.id}Error`);
+                const inputGroup = field.closest('.input-group');
+
+                if (inputGroup) {
+                    inputGroup.classList.remove('error');
+                }
+
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+            }
+
+            // Gestion de la photo
+            function handlePhotoUpload(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Vérifier la taille du fichier (max 2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast('La photo ne doit pas dépasser 2MB', 'error');
+                        return;
+                    }
+
+                    // Vérifier le type de fichier
+                    if (!file.type.match('image.*')) {
+                        showToast('Veuillez sélectionner une image', 'error');
+                        return;
+                    }
+
+                    // Afficher la prévisualisation
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoPreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Génération du matricule
+            function generateMatricule() {
+                const annee = document.getElementById('anneeScolaire').value.substring(2, 4) || '24';
+                const niveau = document.getElementById('niveau').value || 'XX';
+                const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                const matricule = `E${annee}${niveau}${random}`;
+                matriculeInput.value = matricule;
+                clearError(matriculeInput);
+            }
+
+            // Calcul de l'âge
+            function updateAge() {
+                if (birthDateInput.value) {
+                    const birthDate = new Date(birthDateInput.value);
+                    const age = calculateAge(birthDate);
+                    ageDisplay.textContent = `Âge : ${age} ans`;
+                    ageDisplay.style.color = age < 6 || age > 18 ? '#ef4444' : '#10b981';
+                } else {
+                    ageDisplay.textContent = '';
+                }
+            }
+
+            function calculateAge(birthDate) {
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                return age;
+            }
+
+            // Récapitulatif
+            function updateRecap() {
+                const recapData = {
+                    'Nom complet': `${document.getElementById('lastName').value} ${document.getElementById('firstName').value}`,
+                    'Date de naissance': formatDate(document.getElementById('birthDate').value),
+                    'Âge': calculateAge(new Date(document.getElementById('birthDate').value)) + ' ans',
+                    'Niveau': document.getElementById('niveau').options[document.getElementById('niveau').selectedIndex].text,
+                    'Année scolaire': document.getElementById('anneeScolaire').value,
+                    'Matricule': document.getElementById('matricule').value,
+                    'Parent 1': document.getElementById('parent1Nom').value,
+                    'Téléphone parent': document.getElementById('parent1Tel').value
+                };
+
+                recapContainer.innerHTML = '';
+                Object.entries(recapData).forEach(([label, value]) => {
+                    if (value && value !== 'undefined undefined') {
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
+                        div.innerHTML = `
+                            <span class="font-medium text-gray-700">${label}</span>
+                            <span class="text-gray-900 font-medium">${value}</span>
+                        `;
+                        recapContainer.appendChild(div);
+                    }
+                });
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('fr-FR');
+            }
+
+            // Sauvegarde du brouillon
+            function saveDraft() {
+                const formData = new FormData(form);
+                const draft = {};
+                
+                formData.forEach((value, key) => {
+                    draft[key] = value;
+                });
+
+                // Sauvegarder la photo si elle existe
+                const photoFile = studentPhoto.files[0];
+                if (photoFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        draft.photo = e.target.result;
+                        localStorage.setItem('studentDraft', JSON.stringify(draft));
+                        showToast('Brouillon sauvegardé avec succès', 'success');
+                    };
+                    reader.readAsDataURL(photoFile);
+                } else {
+                    localStorage.setItem('studentDraft', JSON.stringify(draft));
+                    showToast('Brouillon sauvegardé avec succès', 'success');
+                }
+            }
+
+            function loadDraft() {
+                const draft = localStorage.getItem('studentDraft');
+                if (draft) {
+                    try {
+                        const draftData = JSON.parse(draft);
+                        Object.keys(draftData).forEach(key => {
+                            const field = form.querySelector(`[name="${key}"]`);
+                            if (field) {
+                                if (field.type === 'file') {
+                                    // Gérer les fichiers séparément
+                                } else if (field.type === 'checkbox') {
+                                    field.checked = draftData[key] === 'on';
+                                } else {
+                                    field.value = draftData[key];
+                                }
+                            }
+                        });
+
+                        // Restaurer la photo
+                        if (draftData.photo) {
+                            photoPreview.innerHTML = `<img src="${draftData.photo}" class="w-full h-full object-cover">`;
+                        }
+
+                        showToast('Brouillon chargé avec succès', 'info');
+                    } catch (error) {
+                        console.error('Erreur lors du chargement du brouillon:', error);
+                    }
+                }
+            }
+
+            // Soumission du formulaire
+            function submitForm(e) {
+                e.preventDefault();
+
+                if (!validateStep(currentStep)) {
+                    showToast('Veuillez corriger les erreurs avant de soumettre', 'error');
+                    return;
+                }
+
+                const conditions = document.getElementById('acceptConditions');
+                if (!conditions.checked) {
+                    showError(conditions, 'Vous devez accepter les conditions');
+                    showToast('Veuillez accepter les conditions générales', 'error');
+                    return;
+                }
+
+                // Simuler l'envoi au serveur
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Traitement...';
+                submitBtn.disabled = true;
+
+                setTimeout(() => {
+                    showToast('Élève inscrit avec succès !', 'success');
+                    
+                    // Réinitialiser le formulaire
+                    form.reset();
+                    photoPreview.innerHTML = `
+                        <div class="w-full h-full bg-gradient-to-r from-indigo-100 to-purple-100 flex items-center justify-center">
+                            <i class="fas fa-camera text-gray-400 text-3xl"></i>
+                        </div>
+                    `;
+                    
+                    // Supprimer le brouillon
+                    localStorage.removeItem('studentDraft');
+                    
+                    // Rediriger après 2 secondes
+                    setTimeout(() => {
+                        window.location.href = 'liste-eleves.html';
+                    }, 2000);
+                }, 2000);
+            }
+
+            // Système de notifications Toast
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast glass-effect rounded-lg p-4 flex items-center space-x-3 ${type === 'error' ? 'border-l-4 border-red-500' : type === 'success' ? 'border-l-4 border-green-500' : 'border-l-4 border-blue-500'}`;
+                
+                const icon = type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle';
+                const iconColor = type === 'error' ? 'text-red-500' : type === 'success' ? 'text-green-500' : 'text-blue-500';
+                
+                toast.innerHTML = `
+                    <i class="fas fa-${icon} ${iconColor} text-lg"></i>
+                    <span class="flex-1">${message}</span>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                const container = document.getElementById('toastContainer');
+                container.appendChild(toast);
+                
+                // Supprimer automatiquement après 5 secondes
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 5000);
+            }
+
+            // Exposer certaines fonctions globalement pour les événements onclick
+            window.showToast = showToast;
+        });
+    </script>
+</body>
+</html>
